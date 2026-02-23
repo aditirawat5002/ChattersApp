@@ -1,6 +1,28 @@
 import Conversation from "../Models/conversationModels.js";
 import User from "../Models/userModels.js";
 
+export const getUserProfile=async(req,res)=>{
+try {
+    const { id } = req.params;
+    const user = await User.findById(id).select("-password");
+    
+    if(!user) {
+        return res.status(404).send({
+            success: false,
+            message: "User not found"
+        });
+    }
+    
+    res.status(200).send(user);
+} catch (error) {
+    res.status(500).send({
+        success: false,
+        message: error
+    })
+    console.log(error);
+}
+}
+
 export const getUserBySearch=async(req,res)=>{
 try {
     const search = req.query.search || '';

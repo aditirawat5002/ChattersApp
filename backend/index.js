@@ -29,7 +29,11 @@ app.get("*",(req,res)=>{
 
 const PORT = process.env.PORT || 3000
 
-server.listen(PORT,()=>{
-    dbConnect();
-    console.log(`Working at ${PORT}`);
-})
+const startServer = async () => {
+    await dbConnect();
+    server.listen(PORT,()=>{
+        console.log(`Working at ${PORT}`);
+    })
+}
+
+startServer();

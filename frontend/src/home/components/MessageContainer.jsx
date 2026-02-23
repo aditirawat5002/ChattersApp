@@ -17,14 +17,18 @@ const MessageContainer = ({ onBackUser }) => {
     const lastMessageRef = useRef();
 
     useEffect(()=>{
-      socket?.on("newMessage",(newMessage)=>{
+      if(!socket) return;
+      
+      const handleNewMessage = (newMessage) => {
         const sound = new Audio(notify);
         sound.play();
-        setMessage([...messages,newMessage])
-      })
+        setMessage((prevMessages) => [...prevMessages, newMessage])
+      };
 
-      return ()=> socket?.off("newMessage");
-    },[socket,setMessage,messages])
+      socket.on("newMessage", handleNewMessage);
+
+      return ()=> socket.off("newMessage", handleNewMessage);
+    },[socket])
 
     useEffect(()=>{
         setTimeout(()=>{

@@ -2,12 +2,42 @@ import Conversation from "../Models/conversationModels.js";
 import Message from "../Models/messageSchema.js";
 import { getReciverSocketId,io } from "../Socket/socket.js";
 
+const filterBadWords = (text) => {
+    const badWords = [
+        'damn', 'hell', 'crap', 'ass', 'bitch', 'bastard', 'shit', 'fuck',
+        'asshole', 'prick', 'dick', 'cock', 'pussy', 'motherfucker', 'fucker'
+    ];
+    
+    // Words to exclude from filtering
+    const exceptions = [
+        'hello', 'class', 'bass', 'pass', 'grass', 'glass', 'mass', 'compass',
+        'embarrass', 'assassin', 'harassment', 'cockroach', 'cocktail', 'cocky',
+        'dickens', 'dickinsons'
+    ];
+    
+    let filtered = text;
+    badWords.forEach(word => {
+        // Use word boundaries to match only whole words
+        const regex = new RegExp(`\\b${word}\\b`, 'gi');
+        filtered = filtered.replace(regex, (match) => {
+            // Check if the matched word is in the exceptions list
+            if (exceptions.includes(match.toLowerCase())) {
+                return match;
+            }
+            return '*'.repeat(word.length);
+        });
+    });
+    return filtered;
+};
+
 export const sendMessage =async(req,res)=>{
 try {
     const {messages} = req.body;
     const {id:reciverId} = req.params;
     const senderId = req.user._conditions._id;
 
+    // Apply profanity filter
+    const filteredMessage = filterBadWords(messages);
 
     let chats = await Conversation.findOne({
         participants:{$all:[senderId , reciverId]}
@@ -22,7 +52,7 @@ try {
     const newMessages = new Message({
         senderId,
         reciverId,
-        message:messages,
+        message:filteredMessage,
         conversationId: chats._id
     })
 
