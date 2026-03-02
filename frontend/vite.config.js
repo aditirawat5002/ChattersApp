@@ -7,8 +7,9 @@ export default defineConfig({
   server:{
     proxy:{
       '/api':{
-        target:'https://slrtech-chatapp.onrender.com/',
-        secure:false
+        target:'http://localhost:3000',
+        changeOrigin:true,
+        rewrite:(path)=>path
       }
     }
   },

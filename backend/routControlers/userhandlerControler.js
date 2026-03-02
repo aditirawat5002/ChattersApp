@@ -26,7 +26,7 @@ try {
 export const getUserBySearch=async(req,res)=>{
 try {
     const search = req.query.search || '';
-    const currentUserID = req.user._conditions._id;
+    const currentUserID = req.user._id;
     const user = await User.find({
         $and:[
             {
@@ -38,7 +38,7 @@ try {
                 _id:{$ne:currentUserID}
             }
         ]
-    }).select("-password").select("email")
+    }).select("-password")
 
     res.status(200).send(user)
 
@@ -54,7 +54,7 @@ try {
 
 export const getCorrentChatters=async(req,res)=>{
     try {
-        const currentUserID = req.user._conditions._id;
+        const currentUserID = req.user._id;
         const currenTChatters = await Conversation.find({
             participants:currentUserID
         }).sort({
@@ -82,5 +82,39 @@ export const getCorrentChatters=async(req,res)=>{
             message: error
         })
         console.log(error);
+    }
+}
+
+export const updateProfilePic=async(req,res)=>{
+    try {
+        const userId = req.user._id;
+        console.log('updateProfilePic called, body size:', JSON.stringify(req.body).length);
+        const { profilepic } = req.body;
+
+        if (!profilepic) {
+            return res.status(400).send({
+                success: false,
+                message: "No image provided"
+            });
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { profilepic },
+            { new: true }
+        ).select("-password");
+
+        res.status(200).send({
+            success: true,
+            message: "Profile picture updated successfully",
+            user: updatedUser
+        });
+
+    } catch (error) {
+        res.status(500).send({
+            success: false,
+            message: error.message
+        })
+        console.log('error in updateProfilePic', error);
     }
 }

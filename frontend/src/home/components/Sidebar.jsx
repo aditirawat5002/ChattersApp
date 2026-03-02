@@ -23,7 +23,6 @@ const Sidebar = ({ onSelectUser }) => {
     const { onlineUser , socket} = useSocketContext();
 
     const nowOnline = chatUser.map((user)=>(user._id));
-    //chats function
     const isOnline = nowOnline.map(userId => onlineUser.includes(userId));
 
     useEffect(()=>{
@@ -33,7 +32,6 @@ const Sidebar = ({ onSelectUser }) => {
         return ()=> socket?.off("newMessage");
     },[socket,messages])
 
-    //show user with u chatted
     useEffect(() => {
         const chatUserHandler = async () => {
             setLoading(true)
@@ -55,7 +53,6 @@ const Sidebar = ({ onSelectUser }) => {
         chatUserHandler()
     }, [])
     
-    //show user from the search result
     const handelSearchSubmit = async (e) => {
         e.preventDefault();
         setLoading(true)
@@ -78,7 +75,6 @@ const Sidebar = ({ onSelectUser }) => {
         }
     }
 
-    //show which user is selected
     const handelUserClick = (user) => {
         onSelectUser(user);
         setSelectedConversation(user);
@@ -86,20 +82,17 @@ const Sidebar = ({ onSelectUser }) => {
         setNewMessageUsers('')
     }
 
-    //back from search result
     const handSearchback = () => {
         setSearchuser([]);
         setSearchInput('')
     }
 
-    //logout
     const handelLogOut = async () => {
-
-        const confirmlogout = window.prompt("type 'UserName' To LOGOUT");
+        const confirmlogout = window.prompt(`Type '${authUser.username}' to logout`);
         if (confirmlogout === authUser.username) {
             setLoading(true)
             try {
-                const logout = await axios.post('/api/auth/logout')
+                const logout = await axios.post('/api/auth/logout', {}, { withCredentials: true })
                 const data = logout.data;
                 if (data?.success === false) {
                     setLoading(false)
@@ -115,120 +108,148 @@ const Sidebar = ({ onSelectUser }) => {
                 console.log(error);
             }
         } else {
-            toast.info("LogOut Cancelled")
+            toast.info("Logout cancelled")
         }
-
     }
 
     return (
-        <div className='h-full w-auto px-1'>
-            <div className='flex justify-between gap-2'>
-                <form onSubmit={handelSearchSubmit} className='w-auto flex items-center justify-between bg-white rounded-full '>
+        <div className='h-full w-full flex flex-col p-4 bg-gradient-to-b from-white/10 to-white/5'>
+            {/* Header */}
+            <div className='flex items-center justify-between mb-6'>
+                <h2 className='text-2xl font-bold text-white'>Messages</h2>
+                <img
+                    onClick={() => navigate(`/profile/${authUser?._id}`)}
+                    src={authUser?.profilepic}
+                    className='h-12 w-12 rounded-full hover:scale-110 cursor-pointer border-2 border-indigo-500 transition-transform' 
+                    alt='profile'
+                />
+                {/* always show logout icon next to avatar */}
+                <button
+                    onClick={handelLogOut}
+                    disabled={loading}
+                    className='ml-2 p-2 bg-red-600/20 hover:bg-red-600/40 text-red-300 rounded-full transition-colors'
+                    title='Logout'
+                >
+                    <BiLogOut size={20} />
+                </button>
+            </div>
+
+            {/* Search Bar */}
+            <form onSubmit={handelSearchSubmit} className='mb-6'>
+                <div className='relative'>
+                    <FaSearch className='absolute left-3 top-3.5 text-slate-400 text-sm' />
                     <input
                         value={searchInput}
                         onChange={(e) => setSearchInput(e.target.value)}
                         type='text'
-                        className='px-4 w-auto bg-transparent outline-none rounded-full'
-                        placeholder='search user'
+                        placeholder='Search users...'
+                        className='w-full pl-10 pr-4 py-2.5 bg-white/10 border border-white/20 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all'
                     />
-                    <button className='btn btn-circle bg-sky-700 hover:bg-gray-950'>
-                        <FaSearch />
-                    </button>
-                </form>
-                <img
-                    onClick={() => navigate(`/profile/${authUser?._id}`)}
-                    src={authUser?.profilepic}
-                    className='self-center h-12 w-12 hover:scale-110 cursor-pointer' />
-            </div>
-            <div className='divider px-3'></div>
+                </div>
+            </form>
+
+            {/* User List */}
             {searchUser?.length > 0 ? (
                 <>
-                    <div className="min-h-[70%] max-h-[80%] m overflow-y-auto scrollbar ">
-                        <div className='w-auto'>
-                            {searchUser.map((user, index) => (
-                                <div key={user._id}>
-                                    <div
-                                        onClick={() => handelUserClick(user)}
-                                        className={`flex gap-3 
-                                                items-center rounded 
-                                                p-2 py-1 cursor-pointer
-                                                ${selectedUserId === user?._id ? 'bg-sky-500' : ''
-                                            } `}>
-                                        {/*Socket is Online*/}
-                                        <div className={`avatar ${isOnline[index] ? 'online':''}`}>
-                                            <div className="w-12 rounded-full">
-                                                <img src={user.profilepic} alt='user.img' />
-                                            </div>
-                                        </div>
-                                        <div className='flex flex-col flex-1'>
-                                            <p className='font-bold text-gray-950'>{user.username}</p>
-                                        </div>
-                                    </div>
-                                    <div className='divider divide-solid px-3 h-[1px]'></div>
+                    <div className="flex-1 overflow-y-auto scrollbar space-y-2 mb-4">
+                        {searchUser.map((user, index) => (
+                            <div
+                                key={user._id}
+                                onClick={() => handelUserClick(user)}
+                                className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-102
+                                    ${selectedUserId === user?._id 
+                                        ? 'bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg' 
+                                        : 'bg-white/10 hover:bg-white/20 border border-white/10'
+                                    }`}
+                            >
+                                <div className='relative'>
+                                    <img 
+                                        src={user.profilepic} 
+                                        alt={user.username}
+                                        className='w-10 h-10 rounded-full object-cover'
+                                    />
+                                    {isOnline[index] && (
+                                        <div className='absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white'></div>
+                                    )}
                                 </div>
-                            )
-                            )}
-                        </div>
+                                <div className='flex-1 min-w-0'>
+                                    <p className='font-semibold text-white truncate'>{user.username}</p>
+                                    <p className='text-xs text-slate-300'>{user.fullname}</p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
-                    <div className='mt-auto px-1 py-1 flex'>
-                        <button onClick={handSearchback} className='bg-white rounded-full px-2 py-1 self-center'>
-                            <IoArrowBackSharp size={25} />
-                        </button>
-
-                    </div>
+                    
+                    <button 
+                        onClick={handSearchback}
+                        className='flex items-center gap-2 px-3 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg text-white transition-all'>
+                        <IoArrowBackSharp size={18} />
+                        <span className='text-sm font-medium'>Back</span>
+                    </button>
                 </>
             ) : (
                 <>
-                    <div className="min-h-[70%] max-h-[80%] m overflow-y-auto scrollbar ">
-                        <div className='w-auto'>
-                            {chatUser.length === 0 ? (
-                                <>
-                                    <div className='font-bold items-center flex flex-col text-xl text-yellow-500'>
-                                        <h1>Why are you Alone!!🤔</h1>
-                                        <h1>Search username to chat</h1>
-                                    </div>
-                                </>
-                            ) : (
-                                <>
-                                    {chatUser.map((user, index) => (
-                                        <div key={user._id}>
-                                            <div
-                                                onClick={() => handelUserClick(user)}
-                                                className={`flex gap-3 
-                                                items-center rounded 
-                                                p-2 py-1 cursor-pointer
-                                                ${selectedUserId === user?._id ? 'bg-sky-500' : ''
-                                                    } `}>
-
-                                                {/*Socket is Online*/}
-                                                <div className={`avatar ${isOnline[index] ? 'online':''}`}>
-                                                    <div className="w-12 rounded-full">
-                                                        <img src={user.profilepic} alt='user.img' />
-                                                    </div>
-                                                </div>
-                                                <div className='flex flex-col flex-1'>
-                                                    <p className='font-bold text-gray-950'>{user.username}</p>
-                                                </div>
-                                                    <div>
-                                                        { newMessageUsers.reciverId === authUser._id && newMessageUsers.senderId === user._id ?
-                                                    <div className="rounded-full bg-green-700 text-sm text-white px-[4px]">+1</div>:<></>
-                                                        }
-                                                    </div>
-                                            </div>
-                                            <div className='divider divide-solid px-3 h-[1px]'></div>
-                                        </div>
-                                    )
-                                    )}
-                                </>
-                            )}
+                    {loading ? (
+                        <div className='flex-1 flex items-center justify-center'>
+                            <div className='text-center'>
+                                <div className='loading loading-spinner text-indigo-500 mb-2'></div>
+                                <p className='text-slate-300 text-sm'>Loading chats...</p>
+                            </div>
                         </div>
-                    </div>
-                    <div className='mt-auto px-1 py-1 flex'>
-                        <button onClick={handelLogOut} className='hover:bg-red-600  w-10 cursor-pointer hover:text-white rounded-lg'>
-                            <BiLogOut size={25} />
-                        </button>
-                        <p className='text-sm py-1'>Logout</p>
-                    </div>
+                    ) : chatUser.length === 0 ? (
+                        <div className='flex-1 flex items-center justify-center'>
+                            <div className='text-center'>
+                                <p className='text-3xl mb-2'>👋</p>
+                                <p className='text-white font-semibold mb-2'>No conversations yet</p>
+                                <p className='text-slate-300 text-sm'>Search for users to start chatting</p>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="flex-1 overflow-y-auto scrollbar space-y-2 mb-4">
+                                {chatUser.map((user, index) => (
+                                    <div
+                                        key={user._id}
+                                        onClick={() => handelUserClick(user)}
+                                        className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 transform hover:scale-102
+                                            ${selectedUserId === user?._id 
+                                                ? 'bg-gradient-to-r from-indigo-600 to-purple-600 shadow-lg' 
+                                                : 'bg-white/10 hover:bg-white/20 border border-white/10'
+                                            }`}
+                                    >
+                                        <div className='relative'>
+                                            <img 
+                                                src={user.profilepic} 
+                                                alt={user.username}
+                                                className='w-10 h-10 rounded-full object-cover'
+                                            />
+                                            {isOnline[index] && (
+                                                <div className='absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white'></div>
+                                            )}
+                                        </div>
+                                        <div className='flex-1 min-w-0'>
+                                            <p className='font-semibold text-white truncate'>{user.username}</p>
+                                            <p className='text-xs text-slate-300'>{user.fullname}</p>
+                                        </div>
+                                        {newMessageUsers.reciverId === authUser._id && newMessageUsers.senderId === user._id && (
+                                            <div className='flex-shrink-0'>
+                                                <div className='bg-indigo-600 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center'>+1</div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+
+                            <button 
+                                onClick={handelLogOut}
+                                disabled={loading}
+                                className='flex items-center justify-center gap-2 w-full px-4 py-2.5 bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 rounded-lg text-red-400 hover:text-red-300 transition-all duration-200 font-semibold disabled:opacity-50'
+                            >
+                                <BiLogOut size={20} />
+                                <span>Logout</span>
+                            </button>
+                        </>
+                    )}
                 </>
             )}
         </div>

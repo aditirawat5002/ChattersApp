@@ -14,7 +14,8 @@ const __dirname = path.resolve();
 dotenv.config();
 
 
-app.use(express.json());
+// allow larger payloads (base64 images); default limit is ~100kb
+app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser())
 
 app.use('/api/auth',authRouter)
