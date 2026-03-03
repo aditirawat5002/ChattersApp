@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useSocketContext } from '../context/SocketContext';
 import axios from 'axios';
 import { IoArrowBack, IoMailSharp, IoPersonSharp, IoCamera } from 'react-icons/io5';
 import { toast } from 'react-toastify';
@@ -9,6 +10,7 @@ export default function Profile() {
     const { id } = useParams();
     const navigate = useNavigate();
     const { authUser, setAuthUser } = useAuth();
+    const { profilePicUpdated } = useSocketContext();
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isOwnProfile, setIsOwnProfile] = useState(false);
@@ -32,6 +34,16 @@ export default function Profile() {
 
         fetchUserProfile();
     }, [id, authUser]);
+
+    // listen for profile picture updates and refresh if this is the updated user
+    useEffect(() => {
+        if (profilePicUpdated && user && profilePicUpdated.userId === user._id) {
+            setUser(prev => ({
+                ...prev,
+                profilepic: profilePicUpdated.profilepic
+            }));
+        }
+    }, [profilePicUpdated, user]);
 
     const handleImageSelect = (e) => {
         const file = e.target.files?.[0];

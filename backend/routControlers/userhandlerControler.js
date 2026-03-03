@@ -1,5 +1,6 @@
 import Conversation from "../Models/conversationModels.js";
 import User from "../Models/userModels.js";
+import { io } from "../Socket/socket.js";
 
 export const getUserProfile=async(req,res)=>{
 try {
@@ -103,6 +104,12 @@ export const updateProfilePic=async(req,res)=>{
             { profilepic },
             { new: true }
         ).select("-password");
+
+        // emit socket event to notify all clients that this user's profile pic changed
+        io.emit('profilePicUpdated', {
+            userId: userId.toString(),
+            profilepic: profilepic
+        });
 
         res.status(200).send({
             success: true,

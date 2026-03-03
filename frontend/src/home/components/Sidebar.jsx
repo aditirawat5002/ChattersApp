@@ -20,7 +20,7 @@ const Sidebar = ({ onSelectUser }) => {
     const [selectedUserId, setSetSelectedUserId] = useState(null);
     const [newMessageUsers, setNewMessageUsers] = useState('');
     const {messages , setMessage, selectedConversation ,  setSelectedConversation} = userConversation();
-    const { onlineUser , socket} = useSocketContext();
+    const { onlineUser , socket, profilePicUpdated} = useSocketContext();
 
     const nowOnline = chatUser.map((user)=>(user._id));
     const isOnline = nowOnline.map(userId => onlineUser.includes(userId));
@@ -51,7 +51,27 @@ const Sidebar = ({ onSelectUser }) => {
             }
         }
         chatUserHandler()
-    }, [])
+    }, [authUser])
+    
+    // refetch user data when profile pic is updated
+    useEffect(() => {
+        if (profilePicUpdated) {
+            setChatUser(prev => 
+                prev.map(user => 
+                    user._id === profilePicUpdated.userId 
+                        ? { ...user, profilepic: profilePicUpdated.profilepic }
+                        : user
+                )
+            );
+            setSearchuser(prev =>
+                prev.map(user =>
+                    user._id === profilePicUpdated.userId
+                        ? { ...user, profilepic: profilePicUpdated.profilepic }
+                        : user
+                )
+            );
+        }
+    }, [profilePicUpdated])
     
     const handelSearchSubmit = async (e) => {
         e.preventDefault();

@@ -15,8 +15,13 @@ dotenv.config();
 
 
 // allow larger payloads (base64 images); default limit is ~100kb
-app.use(express.json({ limit: '10mb' }));
+// we bump the limit because base64 images can easily exceed 10MB for high-res files
+app.use(express.json({ limit: '50mb' }));
 app.use(cookieParser())
+
+// optional: enable CORS in case front and back run cross‑origin
+import cors from 'cors';
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }));
 
 app.use('/api/auth',authRouter)
 app.use('/api/message',messageRouter)

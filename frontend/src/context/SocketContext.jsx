@@ -11,6 +11,7 @@ export const useSocketContext=()=>{
 export const SocketContextProvider=({children})=>{
     const [socket , setSocket]= useState(null);
     const [onlineUser,setOnlineUser]=useState([]);
+    const [profilePicUpdated, setProfilePicUpdated] = useState(null);
     const {authUser} = useAuth();
     useEffect(()=>{
         if(authUser){
@@ -25,6 +26,13 @@ export const SocketContextProvider=({children})=>{
             socket.on("getOnlineUsers",(users)=>{
                 setOnlineUser(users)
             });
+            
+            // listen for profile picture updates from other users
+            socket.on("profilePicUpdated",(data)=>{
+                console.log('profile pic updated via socket:', data);
+                setProfilePicUpdated(data);
+            });
+            
             setSocket(socket);
             return()=>socket.close();
         }else{
@@ -35,7 +43,7 @@ export const SocketContextProvider=({children})=>{
         }
     },[authUser]);
     return(
-    <SocketContext.Provider value={{socket , onlineUser}}>
+    <SocketContext.Provider value={{socket , onlineUser, profilePicUpdated}}>
         {children}
     </SocketContext.Provider>
     )
